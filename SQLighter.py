@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import sqlite3
 
+
 class SQLighter:
 
     def __init__(self, database):
@@ -9,7 +10,7 @@ class SQLighter:
 
     def get_subscribers(self):
         with self.connection:
-            return self.cursor.execute('SELECT * FROM users').fetchall()
+            return self.cursor.execute('SELECT * FROM subscribers').fetchall()
 
     def add_subscriber(self, user_id):
         with self.connection:
@@ -20,4 +21,4 @@ class SQLighter:
                 return False
 
     def close(self):
-	self.connection.close()
+        self.connection.close()
