@@ -21,10 +21,21 @@ class Lesson:
         self.classroomName = classroomName
 
 
+    def toString(self):
+        string = self.name
+        return string
+
+
 class Day:
     def __init__(self, date, lessons):
         self.date = date
         self.lessons = lessons
+
+    def to_string(self):
+        string = ""
+        for lesson in self.lessons:
+            string += lesson.toString() + "\n"
+        return string
 
 
 class Week:
@@ -48,17 +59,12 @@ subscribers = set()
 # Timetable
 timetable = list()
 
+
 # Fix bugs in html
 def fixer(page):
-    page = \
-        page\
-        .replace("--!>", "-->")\
-        .replace("<I>", "")\
-        .replace("</I>", "")\
-        .replace("<B>", "")\
-        .replace("</B>", "")\
-        .replace("</P>", "")\
-
+    page = page.replace("--!>", "-->")
+    page = re.sub('<[/]?B>', "", page)
+    page = re.sub('<[/]?I>', "", page)
     page = re.sub('<[/]?FONT.*?>', "", page)
     page = re.sub("<[/]?P.*?>", "", page)
     return page
@@ -71,11 +77,10 @@ def parse_date(date_str):
     days_week = {
         "Пнд": 1,
         "Втр": 2,
-        "Срд": 2,
-        "Чтв": 2,
-        "Птн": 2,
-        "Сбт": 2,
-
+        "Срд": 3,
+        "Чтв": 4,
+        "Птн": 5,
+        "Сбт": 6,
     }
     date_str = date_str.replace(',', ' ').strip().split(' ')
     return Date(days_week[date_str[0]], int(date_str[1]), months[date_str[3]])
@@ -113,34 +118,94 @@ def parse():
 
     return days
 
+
 days = parse()
 
 
-def show_today_tt(bot, update):
-    now = datetime.datetime.now()
+def help(bot, update):
+    update.message.reply_text('''
+/help - shows help
+/today - shows today timetable
+/tomorrow - shows tomorrow timetable
+/subscribe - subscribe you to tt updates
+/unsubscribe - unsubscribe you from tt updates
+    ''')
 
-    bot.send_message(chat_id=update.message.chat.id, text="Day: {0}, Month: {1}".format(now.day, now.month))
+
+# Callback send message with new sessions
+def update_tt(bot, job):
+    global days
+    days = parse()
+    print("TT updated")
+
+
+def subscribe(bot, update):
+    state = db.subscribe(update.message.chat.id)
+    if state is False:
+        bot.send_message(chat_id=update.message.chat.id, text='You already subscribed')
+    else:
+        bot.send_message(chat_id=update.message.chat.id, text='You have successfully subscribed')
+
+
+def unsubscribe(bot, update):
+    state = db.unsubscribe(update.message.chat.id)
+    if state is False:
+        bot.send_message(chat_id=update.message.chat.id, text='You are not subscribed')
+    else:
+        bot.send_message(chat_id=update.message.chat.id, text='You have successfully unsubscribed')
+
+
+def show_tt(bot, update, date):
+    bot.send_message(chat_id=update.message.chat.id, text="Day: {0}, Month: {1}".format(date.day, date.month))
 
     # Find out day
     flag = False
     for day in days:
-        if day.date.month == now.month and day.date.day == now.day + 1:
-            tt = ""
-            for lesson in day.lessons:
-                tt += lesson.name + "\n"
+        if day.date.month == date.month and day.date.day == date.day:
             bot.send_message(chat_id=update.message.chat.id,
-                             text=tt)
+                             text=day.to_string())
             flag = True
             break
 
     if not flag:
         bot.send_message(chat_id=update.message.chat.id,
-                             text="TT not found")
+                         text="TT not found")
 
 
+def show_today_tt(bot, update):
+    now = datetime.datetime.now()
+    day = now.day
+    month = now.month
+
+    # Logger
+    print("User {0} requested TT for today".format(update.message.chat.first_name))
+
+    show_tt(bot, update, Date("", day, month))
+
+
+def show_tomorrow_tt(bot, update):
+    now = datetime.datetime.now()
+    day = now.day + 1
+    month = now.month
+
+    # Logger
+    print("User {0} requested TT for tomorrow".format(update.message.chat.first_name))
+
+    show_tt(bot, update, Date("", day, month))
+
+
+# Repeatable job queue
+job_updater.run_repeating(update_tt, interval=1, first=0)
 
 # Handlers
+dispatcher.add_handler(CommandHandler('help', help))
+dispatcher.add_handler(CommandHandler('start', help))
+
+dispatcher.add_handler(CommandHandler('subscribe', subscribe))
+dispatcher.add_handler(CommandHandler('unsubscribe', unsubscribe))
+
 dispatcher.add_handler(CommandHandler('today', show_today_tt))
+dispatcher.add_handler(CommandHandler('tomorrow', show_tomorrow_tt))
 
 if __name__ == '__main__':
     updater.start_polling()
