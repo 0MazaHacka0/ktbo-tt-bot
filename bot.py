@@ -21,7 +21,7 @@ class Lesson:
         self.classroomName = classroomName
 
 
-    def toString(self):
+    def to_string(self):
         string = self.name
         return string
 
@@ -34,7 +34,7 @@ class Day:
     def to_string(self):
         string = ""
         for lesson in self.lessons:
-            string += lesson.toString() + "\n"
+            string += lesson.to_string() + "\n"
         return string
 
 
