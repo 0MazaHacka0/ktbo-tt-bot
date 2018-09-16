@@ -15,14 +15,31 @@ class Date:
 
 
 class Lesson:
-    def __init__(self, name, teacherName, classroomName):
-        self.name = name
+    def __init__(self, name, teacherName, classroomName, index):
+        if name == "\n":
+            self.name = "ОКНО"
+        else:
+            self.name = name
         self.teacherName = teacherName
         self.classroomName = classroomName
+        self.index = index
+
+
+    def get_time(self, index):
+        time = {
+            1: "08:00-09:35",
+            2: "09:50-11:25",
+            3: "11:55-13:30",
+            4: "13:45-15:20",
+            5: "15:50-17:25",
+            6: "17:40-19:15",
+            7: "19:30-21:05"
+        }
+        return time[index]
 
 
     def to_string(self):
-        string = self.name
+        string = "{0}. {1} {2}".format(self.index, self.get_time(self.index), self.name)
         return string
 
 
@@ -110,8 +127,10 @@ def parse():
             lessons = list()
 
             # For all columns print text
+            tmp = 0
             for column in columns[1::]:
-                lessons.append(Lesson(column.text, "", ""))
+                tmp += 1
+                lessons.append(Lesson(column.text, "", "", tmp))
 
             date = parse_date(columns[0].text)
             days.append(Day(date, lessons))
