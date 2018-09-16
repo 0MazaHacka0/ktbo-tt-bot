@@ -1,4 +1,4 @@
 FROM python:3
-ADD * /
+ADD * /bot
 RUN pip install -r requirements.txt
-CMD [ "python", "./bot.py" ]
+CMD [ "python", "./bot/bot.py" ]
