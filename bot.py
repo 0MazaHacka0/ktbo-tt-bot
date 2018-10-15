@@ -245,7 +245,7 @@ class Bot:
         print("User {0} requested TT for today".format(update.message.chat.first_name))
 
         if len(args) > 0:
-            self.show_tt(bot, update, Date("", day, month), args)
+            self.show_tt(bot, update, Date("", day, month), args[0])
         else:
             self.show_tt(bot, update, Date("", day, month))
 
@@ -258,7 +258,7 @@ class Bot:
         print("User {0} requested TT for tomorrow".format(update.message.chat.first_name))
 
         if len(args) > 0:
-            self.show_tt(bot, update, Date("", day, month), args)
+            self.show_tt(bot, update, Date("", day, month), args[0])
         else:
             self.show_tt(bot, update, Date("", day, month))
 
