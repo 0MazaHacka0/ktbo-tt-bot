@@ -218,7 +218,7 @@ class Bot:
             group_name = db.get_group(update.message.chat.id)
 
         bot.send_message(chat_id=update.message.chat.id,
-                         text="Day: {0}, Month: {1}, Group: {}".format(date.day, date.month, group_name))
+                         text="Day: {0}, Month: {1}, Group: {2}".format(date.day, date.month, group_name))
 
         timetable = list()
 
