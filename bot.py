@@ -204,19 +204,22 @@ class Bot:
         bot.send_message(chat_id=update.message.chat.id,
                          text="Sorry. I can't find this group")
 
-    def show_tt(self, bot, update, date):
+    def show_tt(self, bot, update, date, group_name=""):
 
         # Check if user exists in user table
-        if not db.check_user(update.message.chat.id):
+        if not db.check_user(update.message.chat.id) and not (group_name == ""):
             bot.send_message(chat_id=update.message.chat.id,
                              text="Sorry, Dave, I can't do it for you. You don't select your group."
                                   "Use /groups and /select commands")
             return
 
-        bot.send_message(chat_id=update.message.chat.id, text="Day: {0}, Month: {1}".format(date.day, date.month))
-
         # Get group
-        group_name = db.get_group(update.message.chat.id)
+        if group_name == "":
+            group_name = db.get_group(update.message.chat.id)
+
+        bot.send_message(chat_id=update.message.chat.id,
+                         text="Day: {0}, Month: {1}, Group: {}".format(date.day, date.month, group_name))
+
         timetable = list()
 
         for group in Parser(config.GROUPS_LIST_URL).parse_groups():
@@ -233,7 +236,7 @@ class Bot:
         bot.send_message(chat_id=update.message.chat.id,
                          text="TT not found")
 
-    def show_today_tt(self, bot, update):
+    def show_today_tt(self, bot, update, args):
         now = datetime.datetime.now()
         day = now.day
         month = now.month
@@ -241,9 +244,12 @@ class Bot:
         # Logger
         print("User {0} requested TT for today".format(update.message.chat.first_name))
 
-        self.show_tt(bot, update, Date("", day, month))
+        if len(args) > 0:
+            self.show_tt(bot, update, Date("", day, month), args)
+        else:
+            self.show_tt(bot, update, Date("", day, month))
 
-    def show_tomorrow_tt(self, bot, update):
+    def show_tomorrow_tt(self, bot, update, args):
         now = datetime.datetime.now()
         day = now.day + 1
         month = now.month
@@ -251,7 +257,10 @@ class Bot:
         # Logger
         print("User {0} requested TT for tomorrow".format(update.message.chat.first_name))
 
-        self.show_tt(bot, update, Date("", day, month))
+        if len(args) > 0:
+            self.show_tt(bot, update, Date("", day, month), args)
+        else:
+            self.show_tt(bot, update, Date("", day, month))
 
 
 # Connect to Telegram
@@ -284,8 +293,8 @@ dispatcher.add_handler(CommandHandler(['start', 'groups'], Bot().start))
 # Select group
 dispatcher.add_handler(CommandHandler('select', Bot().select_group, pass_args=True))
 
-dispatcher.add_handler(CommandHandler('today', Bot().show_today_tt))
-dispatcher.add_handler(CommandHandler('tomorrow', Bot().show_tomorrow_tt))
+dispatcher.add_handler(CommandHandler('today', Bot().show_today_tt, pass_args=True))
+dispatcher.add_handler(CommandHandler('tomorrow', Bot().show_tomorrow_tt, pass_args=True))
 
 if __name__ == '__main__':
     updater.start_polling()
